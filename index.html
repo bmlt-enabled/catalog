@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BMLT GitHub Org Repos</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <style>
+        table.dataTable tbody, thead {
+            font: normal normal normal 14px/1.3em "open sans",sans-serif;
+        }
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            text-align: right;
+            padding: 6px;
+        }
+        table.dataTable thead {
+            color: #000;
+            background-color: #A669B3;
+            opacity: 0.9;
+        }
+        table.dataTable.display tbody tr.odd {
+            background-color: #93bddd;
+        }
+        table.dataTable.display tbody tr.odd > .sorting_1 {
+            background-color: #93bddd;
+        }
+
+        table.dataTable.display tbody tr.odd:hover {
+            background-color: #fff;
+        }
+        table.dataTable.display tbody tr.odd > .sorting_1:hover {
+            background-color: #fff;
+        }
+
+        table.dataTable.display tbody tr.even {
+            background-color: #D8F3FD;
+        }
+        table.dataTable.display tbody tr.even:hover {
+            background-color: #fff;
+        }
+        table.dataTable.display tbody tr.even > .sorting_1 {
+            background-color: #D8F3FD;
+        }
+        table.dataTable.display tbody tr.even > .sorting_1:hover {
+            background-color: #fff;
+        }
+
+
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            text-align: right;
+            padding: 6.7px;
+            width: 99%;
+            border-radius: 6px 6px 0px 0px;
+
+            background-color: #D8F3FD;
+            background-image: -webkit-gradient(linear, left top, left bottom, from(#D8F3FD), to(#0467b1));
+            background-image: -webkit-linear-gradient(top, #D8F3FD, #0467b1);
+            background-image: -moz-linear-gradient(top, #D8F3FD, #0467b1);
+            background-image: -ms-linear-gradient(top, #D8F3FD, #0467b1);
+            background-image: -o-linear-gradient(top, #D8F3FD, #0467b1);
+            background-image: linear-gradient(to bottom, #D8F3FD, #0467b1);
+        }
+
+    </style>
+</head>
+<body>
+<div id="content"style="width:95%">
+    <table id="meetings" class="display">
+        <thead>
+        <tr>
+            <th>NAME</th>
+            <th>DESCRIPTION</th>
+            <th>OWNERS</th>
+            <th>LICENSE</th>
+        </tr>
+        </thead>
+    </table>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+
+function isValidURL(url) {
+    var isValid = null;
+
+    $.ajax({
+      url: 'https://raw.githubusercontent.com/bmlt-enabled/' + url + '/master/CODEOWNERS',
+      type: "get",
+      async: false,
+      dataType: "html",
+      success: function(data) {
+        isValid = data.split(/@(.*)/)[1];	
+      },
+      error: function(){
+        isValid = null;
+      }
+    });
+
+    return isValid;
+}
+
+
+var loadHtml = function(path, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://raw.githubusercontent.com/bmlt-enabled/' + path + '/master/CODEOWNERS', true);
+  xhr.onreadystatechange = function() {
+    if (this.readyState !== 4) return;
+    if (this.status !== 200) return;
+    callback(this.responseText);
+  };
+  xhr.send();
+};
+
+var displayHtml = function(repo) {
+  loadHtml(repo, function(html) {
+ 	if (html !== null) {
+		 var word = html;
+		 console.log(word);
+	}
+   	return null;
+  });
+ 
+  return null;
+};
+
+console.log(displayHtml('yap'));
+
+    $(document).ready(function() {
+        $('#meetings').DataTable( {
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Search"
+            },
+            "info" : false,
+            "scrollY": "600px",
+            "paging": false,
+            "scrollCollapse": true,
+            "ajax": {
+                url: "https://api.github.com/orgs/bmlt-enabled/repos?page=1&per_page=100",
+                dataType: "json",
+                jsonp: true,
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                "dataSrc": function (json) {
+                    var meeting_data = new Array();
+                    for(var i=0;i< json.length; i++){
+                        meeting_data.push({
+                            'name' : '<a href="' + json[i].html_url + '">' + json[i].name + '</a>',
+                            'description': json[i].description,
+                            'owners': isValidURL(json[i].name),
+                            'license': getLicenseName(json[i].license)
+                        })
+                    }
+                    return meeting_data;
+                }
+            },
+            "columns": [
+                {'data': 'name'},
+                {'data': 'description'},
+                {'data': 'owners'},
+                {'data': 'license'}
+            ]
+        } );
+    } );
+    
+     var getLicenseName = function(value) {
+     	if (value !== null) {
+	     	return '<a href="' + value.url + '">' + value.name + '</a>';
+     	}
+     	return null;
+     };
+</script>
+</body>
+</html>
